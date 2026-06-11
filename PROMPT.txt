@@ -1,0 +1,41 @@
+我手头有几十篇 markdown 写的技术笔记，平时在电脑上用 vscode 看还行，但是睡前想在 kindle 上看就很别扭，markdown 直接复制过去排版全乱了，标题变正文、代码块丢缩进、图片显示个破图占位。
+
+想搞个命令行小工具把 markdown 文件或者一整个目录转成 epub 3，这样塞进 kindle 看着就舒服多了。工具用 TypeScript 写，跑在 node 上，命令大概像 md2epub --input ./notes --output ./out/book.epub 这种。也支持多文件参数 md2epub --input ch1.md --input ch2.md --output combined.epub 这样按顺序合并成一本书。
+
+工具读输入的时候支持两种模式，单个 .md 文件直接转，一个目录的话就按文件名字典序把所有 md 文件串起来当一本书，每个文件当成一个 chapter。chapter 的标题自动用文件名的第一行（去掉 # 号），或者如果文件里有 H1 就用 H1 当章节标题，这个细节你定，反正章节之间要有空行分隔，转成 epub 之后左侧目录能正确跳。如果文件没有任何 H1 也没有合适的第一行，就用文件名去掉 .md 后缀当标题。
+
+markdown 解析这块基本语法都得支持，标题（H1-H6 都要有，对应 nav map 里的层级）、段落、列表（包括有序无序嵌套，最多 3 层）、代码块（最好能带语法高亮起码在 epub 里用等宽字体区分下，语言标签保留在 class 里）、引用（> 开头）、加粗斜体、删除线、链接（[text](url)）、图片（![alt](src)）。行内 code ` 也要支持。表格支持 GFM 那种 markdown 表格语法，转成 HTML 表格嵌进去。水平分割线 --- 转成 hr。
+
+图片如果本地存在就内嵌进 epub，路径是相对于 markdown 文件所在目录解析的。远程图片得先下载下来再内嵌，下载失败的图片给个占位的提示文字就行别让整个生成挂掉。下载的时候 User-Agent 头伪装成正常的浏览器避免被某些网站 403。下载的图片如果 mime 推断不出来就当成 image/png 嵌入。图片超过 5MB 的 warn 一下但还是嵌。
+
+epub 3 的结构里 OPF 文件（content.opf）、NCX（toc.ncx，老格式兼容）、NAV（nav.xhtml，新格式）三个都得有。metadata 里至少填 dc:title、dc:creator（author）、dc:language、dc:identifier（urn:uuid 形式）、dc:date（ISO 8601）、dc:publisher、dc:description、dc:subject、dc:rights 这些，title 可以从命令行 --title 传，不传就用输入目录名或者第一个 H1。author 用 --author 传。language 用 --language 传默认 en。identifier 如果不传就生成一个固定的（基于内容 hash）。
+
+字体这块我希望嵌入一个简单的中文字体，命令支持 --embed-font 后面接字体文件路径（支持 woff2 / ttf / otf），嵌进去之后 epub 里的中文就不会因为阅读器没字体变方块了。不传这个参数就不嵌，但会在生成的 css 里加 font-family 指定几个常见的中文 fallback 字体（SimSun、Microsoft YaHei、PingFang SC、Noto Sans CJK SC 之类的）。嵌字体的命令是 --embed-font ./SourceHanSansCN-Regular.otf 这样的。
+
+目录要能多级，markdown 里的 H1 H2 H3 都对应到 nav map 里。H4 以下不计入 nav 但还是按层级生成标题样式。每个章节里如果也有 H1 这个 H1 就当章节标题不再额外生成章节标题。
+
+整个流程有几个状态，启动的时候打印一下要处理的文件数量和总大小，每转完一个文件打个进度，处理完了输出 epub 的实际大小和路径、嵌入的资源数量（图片多少个、字体几个）。
+
+epub 内部的文件组织规范一点，META-INF/container.xml、OEBPS/content.opf、OEBPS/nav.xhtml、OEBPS/toc.ncx、OEBPS/text/chapter-001.xhtml 这样的目录结构。
+
+依赖尽量少，npm 包控制在 10 个以内。markdown-it 或者 marked 二选一，cheerio 处理 XML 拼接（或者就用 node 自带的 DOMParser 之类轻量的），archiver 或者 yazl 写 zip 之类。图片下载用内置 https 或者 node-fetch 那种轻量的。命令行参数解析用 commander 或者 yargs 都行。
+
+写完之后我希望能 npx ts-node src/index.ts --input ./test --output ./out/test.epub 这样直接跑出结果来。整个项目根目录有 package.json、tsconfig.json，tsc 编译完能直接 node dist/index.js 也行。错误处理要友好，markdown 语法错误的行号能告诉用户在哪一行。
+
+输出 EPUB 之前还要做一些清理和优化。CSS 文件单独抽出来 OEBPS/styles/main.css，里面定义正文样式、代码块样式、引用样式、标题层级缩进。代码块用等宽字体并加浅灰背景色。引用块左边加竖线。链接默认蓝色不带下划线，hover 时加下划线。中文段落首行缩进 2em 让中文阅读更舒服，英文段落不缩进通过 lang 标签区分。
+
+图片嵌入要做去重，相同的图片（hash 相同）只嵌入一次，OEBPS/images/ 下面按内容 hash 命名。
+
+封面图支持，--cover 命令后接图片路径，会作为 epub 封面嵌进去（image/jpeg 格式），没传就生成一个纯色的占位封面上面写书名。
+
+生成完之后用户可以传 --validate 参数用 epubcheck 那种规范做基础校验（不引外部 epubcheck 库，自己写一些简单校验：必需文件存在、metadata 字段非空、章节文件能被 nav map 引用到等等）。
+
+调试模式 --debug 启动时打印出中间产物（解析后的 AST、生成的 nav map 树、章节文件列表），方便排查。
+
+整个工具支持 --quiet 减少输出只保留错误，--verbose 详细输出每个步骤。
+
+命令行子命令除了默认的生成（不写子命令就是生成），还支持 md2epub info ./book.epub 这种查看已生成 epub 的元信息和章节数量；md2epub extract ./book.epub --output ./ext 这种把 epub 解开到一个目录方便调试。
+
+代码目录建议这样组织，src/parser/ 放 markdown 解析相关，src/epub/ 放 EPUB 生成相关（opf、ncx、nav、css 等分开文件），src/utils/ 放通用工具，src/cli.ts 是入口。tsconfig 编译到 dist/，package.json 的 bin 字段注册全局命令。
+
+README 里要有使用示例和几个示例 markdown 文件作为测试用例。
