@@ -1,0 +1,9 @@
+修了三个 R1 发现的 bug：
+
+1. `md2epub extract <epub> --output <dir>` 的 --output 参数被无视（commander 子命令的选项被主程序的同名选项 shadow 了），不管传什么都写到 ./extracted。我用 --output /tmp/myoutput 测，结果文件落在 ./extracted 而不是 /tmp/myoutput。请修。
+
+2. `md2epub info <epub>` 的章节数统计有 bug：3 个 md 文件显示 Chapters: 4，因为 cover.xhtml 也被算进章节了。chapter count 应该只算 text/chapter-*.xhtml。
+
+3. PROMPT 写了"中文段落首行缩进 2em，英文段落不缩进通过 lang 标签区分"，但实际生成的 XHTML 里 <p> 标签完全没有 lang 属性，CSS 里的 p:lang(zh) 规则永远不会触发。请把 detectLanguage 的结果真正用上——对每个段落根据内容判断中英文然后设置 lang="zh" 或 lang="en"，让 CSS 真的生效。
+
+请改这三个 bug 后再 commit 第二轮。
