@@ -120,17 +120,17 @@ async function main(): Promise<void> {
     .command('extract')
     .description('Extract an EPUB file to a directory for inspection')
     .argument('<epub>', 'Path to EPUB file')
-    .option('-o, --output <path>', 'Output directory', './extracted')
+    .option('-d, --dir <path>', 'Output directory', './extracted')
     .option('-q, --quiet', 'Suppress output', false)
-    .option('-v, --verbose', 'Show extracted files', false)
-    .action(async (epubPath: string, opts: { output: string; quiet: boolean; verbose: boolean }) => {
+    .option('--verbose', 'Show extracted files', false)
+    .action(async (epubPath: string, opts: { dir: string; quiet: boolean; verbose: boolean }) => {
       const logger = new Logger(opts.quiet, opts.verbose, false);
       try {
         if (!(await fileExists(epubPath))) {
           console.error(`[ERROR] EPUB file not found: ${epubPath}`);
           process.exit(1);
         }
-        const absOutput = path.resolve(opts.output);
+        const absOutput = path.resolve(opts.dir);
         await extractEpub(epubPath, absOutput, logger);
         if (!opts.quiet) {
           console.log(`EPUB extracted to: ${absOutput}`);

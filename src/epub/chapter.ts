@@ -11,13 +11,13 @@ export interface ChapterContext {
 export function generateChapterXhtml(ctx: ChapterContext): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="${escapeXml(ctx.language)}">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${escapeXml(ctx.language)}" xml:lang="${escapeXml(ctx.language)}">
   <head>
     <meta charset="UTF-8"/>
     <title>${escapeXml(ctx.title)}</title>
     <link rel="stylesheet" type="text/css" href="${ctx.cssHref}"/>
   </head>
-  <body>
+  <body lang="${escapeXml(ctx.language)}" xml:lang="${escapeXml(ctx.language)}">
 ${ctx.contentXhtml}
   </body>
 </html>`;
@@ -36,13 +36,13 @@ export function generateCoverXhtml(ctx: CoverContext): string {
   if (ctx.hasCoverImage && ctx.coverImageHref) {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="${escapeXml(ctx.language)}">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${escapeXml(ctx.language)}" xml:lang="${escapeXml(ctx.language)}">
   <head>
     <meta charset="UTF-8"/>
     <title>${escapeXml(ctx.title)}</title>
     <link rel="stylesheet" type="text/css" href="${ctx.cssHref}"/>
   </head>
-  <body class="cover">
+  <body lang="${escapeXml(ctx.language)}" xml:lang="${escapeXml(ctx.language)}" class="cover">
     <img src="${ctx.coverImageHref}" alt="Cover" />
   </body>
 </html>`;
@@ -50,13 +50,13 @@ export function generateCoverXhtml(ctx: CoverContext): string {
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="${escapeXml(ctx.language)}">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${escapeXml(ctx.language)}" xml:lang="${escapeXml(ctx.language)}">
   <head>
     <meta charset="UTF-8"/>
     <title>${escapeXml(ctx.title)}</title>
     <link rel="stylesheet" type="text/css" href="${ctx.cssHref}"/>
   </head>
-  <body class="cover">
+  <body lang="${escapeXml(ctx.language)}" xml:lang="${escapeXml(ctx.language)}" class="cover">
     <div class="cover">
       <h1 class="cover-title">${escapeXml(ctx.title)}</h1>
       ${ctx.author ? `<p class="cover-author">${escapeXml(ctx.author)}</p>` : ''}

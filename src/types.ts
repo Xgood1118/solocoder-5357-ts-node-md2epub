@@ -14,6 +14,7 @@ export interface Chapter {
   content: string;
   xhtml: string;
   headings: HeadingInfo[];
+  language: string;
 }
 
 export interface HeadingInfo {

@@ -186,7 +186,9 @@ export function readEpubInfo(epubPath: string): EpubInfo {
     }
   }
 
-  chapterCount = entries.filter((e) => e.name.includes('OEBPS/text/') && e.name.endsWith('.xhtml')).length;
+  chapterCount = entries.filter(
+    (e) => e.name.includes('OEBPS/text/') && e.name.endsWith('.xhtml') && !e.name.endsWith('cover.xhtml')
+  ).length;
 
   return { metadata, chapterCount, fileList, coverImage };
 }

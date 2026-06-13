@@ -1,1 +1,5 @@
-R1 3 bug：extract 子命令 --output 被主程序同名选项 shadow，写不到指定目录；info 章节数含 cover.xhtml，应只算 text/chapter-*.xhtml；detectLanguage 结果没用上，<p> 缺 lang 属性，CSS 永不触发。
+主流程能跑出 epub，但几处细节要修一下：
+1) extract 子命令的输出参数被主程序同名选项吞了，输出文件落到默认目录。
+2) info 命令章节数把封面页也算进去了，数据不准。
+3) 语言检测定义了但没真用上，标签没有语言属性，无障碍读屏不友好。
+检查修复一下。

@@ -207,6 +207,7 @@ export class EpubGenerator {
       content,
       xhtml: contentXhtml,
       headings: parseResult.headings,
+      language: parseResult.language,
     };
   }
 
@@ -464,7 +465,7 @@ export class EpubGenerator {
 
       const chapterXhtml = generateChapterXhtml({
         title: chapter.title,
-        language: metadata.language,
+        language: chapter.language,
         contentXhtml: chapter.xhtml,
         cssHref: 'styles/main.css',
         chapterNumber: parseInt(chapter.id.split('-')[1]) || 1,
